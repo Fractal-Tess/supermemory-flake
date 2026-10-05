@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="640" height="240" viewBox="0 0 640 240" role="img" aria-labelledby="title desc">
+  <title id="title">Supermemory + Nix</title>
+  <desc id="desc">The white Supermemory mark on a dark navy tile and the blue Nix snowflake, separated by a neutral plus sign on a transparent background.</desc>
+  <!-- Supermemory mark: supermemoryai/supermemory, MIT.
+       Source: https://github.com/supermemoryai/supermemory/blob/main/apps/docs/logo/dark.svg
+       Original geometry retained; set on a flat dark tile after the app icon so it reads on light and dark pages. -->
+  <rect x="60" y="40" width="160" height="160" rx="36" fill="#131a2e"/>
+  <svg x="92" y="79.2" width="96" height="81.6" viewBox="0 0 206 168" aria-hidden="true">
+    <path fill="#FFFFFF" d="M205.864 66.263h-76.401V0h-24.684v71.897c0 7.636 3.021 14.97 8.391 20.373l62.383 62.777 17.454-17.564-46.076-46.365h58.948v-24.84l-.015-.015ZM12.872 30.517l46.075 46.365H0v24.84h76.4v66.264h24.685V96.089c0-7.637-3.021-14.97-8.39-20.374l-62.37-62.762-17.453 17.564Z"/>
+  </svg>
+  <path d="M304 120h32m-16-16v32" fill="none" stroke="#8b949e" stroke-width="6" stroke-linecap="round"/>
+  <!-- Nix snowflake: Simon Frankau and Tim Cuthbertson, CC BY 4.0.
+       https://github.com/NixOS/nixos-artwork/blob/master/logo/nix-snowflake-colours.svg
+       Original geometry and colors retained; resized and positioned for this lockup. -->
+  <svg x="400" y="20" width="200" height="200" viewBox="0 0 501.56251 501.56249" aria-hidden="true">
+    <defs>
+      <linearGradient id="nix-light" gradientUnits="userSpaceOnUse" gradientTransform="translate(70.650339,-1055.1511)" x1="200.59668" y1="351.41116" x2="290.08701" y2="506.18814">
+        <stop offset="0" stop-color="#699ad7"/><stop offset="0.24345198" stop-color="#7eb1dd"/><stop offset="1" stop-color="#7ebae4"/>
+      </linearGradient>
+      <linearGradient id="nix-dark" gradientUnits="userSpaceOnUse" gradientTransform="translate(864.69589,-1491.3405)" x1="-584.19934" y1="782.33563" x2="-496.29703" y2="937.71399">
+        <stop offset="0" stop-color="#415e9a"/><stop offset="0.23168644" stop-color="#4a6baf"/><stop offset="1" stop-color="#5277c3"/>
+      </linearGradient>
+    </defs>
+    <g transform="translate(-156.41121,933.30685)"><g transform="matrix(0.99994059,0,0,0.99994059,-0.06321798,33.188377)" fill-rule="evenodd">
+      <path id="nix-light-arm" d="m 309.54892,-710.38827 122.19683,211.67512 -56.15706,0.5268 -32.6236,-56.8692 -32.85645,56.5653 -27.90237,-0.011 -14.29086,-24.6896 46.81047,-80.4901 -33.22946,-57.8257 z" fill="url(#nix-light)"/>
+      <use xlink:href="#nix-light-arm" transform="rotate(60,407.11155,-715.78724)"/><use xlink:href="#nix-light-arm" transform="rotate(-60,407.31177,-715.70016)"/><use xlink:href="#nix-light-arm" transform="rotate(180,407.41868,-715.7565)"/>
+      <path id="nix-dark-arm" d="m 309.54892,-710.38827 122.19683,211.67512 -56.15706,0.5268 -32.6236,-56.8692 -32.85645,56.5653 -27.90237,-0.011 -14.29086,-24.6896 46.81047,-80.4901 -33.22946,-57.8256 z" fill="url(#nix-dark)"/>
+      <use xlink:href="#nix-dark-arm" transform="rotate(120,407.33916,-716.08356)"/><use xlink:href="#nix-dark-arm" transform="rotate(-120,407.28823,-715.86995)"/>
+    </g></g>
+  </svg>
+</svg>

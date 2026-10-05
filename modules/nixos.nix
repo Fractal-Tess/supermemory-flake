@@ -1,0 +1,87 @@
+{ self }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+let
+  package = self.packages.${pkgs.stdenv.hostPlatform.system}.supermemory-server;
+  cfg = config.services.supermemory-server;
+in
+{
+  options = lib.recursiveUpdate (import ./options.nix { inherit lib package; }) {
+    services.supermemory-server = {
+      dataDir = lib.mkOption {
+        type = lib.types.str;
+        default = "/var/lib/supermemory";
+        description = "Where the database, generated API key, and embedding model cache live.";
+      };
+
+      user = lib.mkOption {
+        type = lib.types.str;
+        default = "supermemory";
+        description = "User the server runs as. Created when left at the default.";
+      };
+
+      group = lib.mkOption {
+        type = lib.types.str;
+        default = "supermemory";
+        description = "Group the server runs as. Created when left at the default.";
+      };
+
+      openFirewall = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Open the port on all interfaces.";
+      };
+
+      firewallInterfaces = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        example = [ "wt0" ];
+        description = "Interfaces to open the port on, such as a VPN interface.";
+      };
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    environment.systemPackages = [ cfg.package ];
+
+    users.users = lib.mkIf (cfg.user == "supermemory") {
+      supermemory = {
+        isSystemUser = true;
+        inherit (cfg) group;
+        home = cfg.dataDir;
+      };
+    };
+    users.groups = lib.mkIf (cfg.group == "supermemory") { supermemory = { }; };
+
+    systemd.tmpfiles.rules = [ "d ${cfg.dataDir} 0750 ${cfg.user} ${cfg.group} -" ];
+
+    systemd.services.supermemory-server = {
+      description = "Supermemory server";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
+      environment = import ./environment.nix { inherit lib cfg; } // {
+        HOME = cfg.dataDir;
+        SUPERMEMORY_DATA_DIR = cfg.dataDir;
+      };
+      serviceConfig = {
+        ExecStart = lib.getExe cfg.package;
+        User = cfg.user;
+        Group = cfg.group;
+        WorkingDirectory = cfg.dataDir;
+        EnvironmentFile = lib.mkIf (cfg.environmentFile != null) cfg.environmentFile;
+        Restart = "on-failure";
+        RestartSec = 5;
+      };
+    };
+
+    networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [ cfg.port ];
+    networking.firewall.interfaces = lib.genAttrs cfg.firewallInterfaces (_: {
+      allowedTCPPorts = [ cfg.port ];
+    });
+  };
+}
