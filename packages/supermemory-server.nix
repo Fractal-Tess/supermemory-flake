@@ -3,6 +3,7 @@
   stdenv,
   fetchurl,
   autoPatchelfHook,
+  makeWrapper,
 }:
 
 let
@@ -37,12 +38,21 @@ stdenv.mkDerivation {
   # ELF image, so stripping it would cut the payload off.
   dontStrip = true;
 
-  nativeBuildInputs = [ autoPatchelfHook ];
+  nativeBuildInputs = [
+    autoPatchelfHook
+    makeWrapper
+  ];
   buildInputs = [ stdenv.cc.cc.lib ];
 
   installPhase = ''
     runHook preInstall
-    install -Dm755 "$src" "$out/bin/supermemory-server"
+    install -Dm755 "$src" "$out/libexec/supermemory-server"
+    # At first start the server unpacks a prebuilt onnxruntime into its data
+    # directory for local embeddings. That library looks up libstdc++ at run
+    # time; without it the server falls back to a WebAssembly build that grows
+    # to tens of gigabytes of memory.
+    makeWrapper "$out/libexec/supermemory-server" "$out/bin/supermemory-server" \
+      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ stdenv.cc.cc.lib ]}
     runHook postInstall
   '';
 
