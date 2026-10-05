@@ -7,10 +7,11 @@
 }:
 let
   package = self.packages.${pkgs.stdenv.hostPlatform.system}.supermemory-server;
+  mcpPackage = self.packages.${pkgs.stdenv.hostPlatform.system}.supermemory-mcp;
   cfg = config.services.supermemory-server;
 in
 {
-  options = lib.recursiveUpdate (import ./options.nix { inherit lib package; }) {
+  options = lib.recursiveUpdate (import ./options.nix { inherit lib package mcpPackage; }) {
     services.supermemory-server.dataDir = lib.mkOption {
       type = lib.types.str;
       default = "%h/.local/share/supermemory";
@@ -38,6 +39,24 @@ in
         RestartSec = 5;
       }
       // lib.optionalAttrs (cfg.environmentFile != null) { EnvironmentFile = cfg.environmentFile; };
+      Install.WantedBy = [ "default.target" ];
+    };
+
+    systemd.user.services.supermemory-mcp = lib.mkIf cfg.mcp.enable {
+      Unit = {
+        Description = "Supermemory MCP endpoint";
+        After = [ "supermemory-server.service" ];
+        Wants = [ "supermemory-server.service" ];
+      };
+      Service = {
+        ExecStart = lib.getExe cfg.mcp.package;
+        Environment = [
+          "SUPERMEMORY_API_URL=http://127.0.0.1:${toString cfg.port}"
+          "SUPERMEMORY_MCP_PORT=${toString cfg.mcp.port}"
+        ];
+        Restart = "on-failure";
+        RestartSec = 5;
+      };
       Install.WantedBy = [ "default.target" ];
     };
   };

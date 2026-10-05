@@ -7,10 +7,12 @@
 }:
 let
   package = self.packages.${pkgs.stdenv.hostPlatform.system}.supermemory-server;
+  mcpPackage = self.packages.${pkgs.stdenv.hostPlatform.system}.supermemory-mcp;
   cfg = config.services.supermemory-server;
+  ports = [ cfg.port ] ++ lib.optional cfg.mcp.enable cfg.mcp.port;
 in
 {
-  options = lib.recursiveUpdate (import ./options.nix { inherit lib package; }) {
+  options = lib.recursiveUpdate (import ./options.nix { inherit lib package mcpPackage; }) {
     services.supermemory-server = {
       dataDir = lib.mkOption {
         type = lib.types.str;
@@ -79,9 +81,28 @@ in
       };
     };
 
-    networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall [ cfg.port ];
+    # It keeps no state and no credentials (callers send their own key), so it
+    # runs as a throwaway user.
+    systemd.services.supermemory-mcp = lib.mkIf cfg.mcp.enable {
+      description = "Supermemory MCP endpoint";
+      after = [ "supermemory-server.service" ];
+      wants = [ "supermemory-server.service" ];
+      wantedBy = [ "multi-user.target" ];
+      environment = {
+        SUPERMEMORY_API_URL = "http://127.0.0.1:${toString cfg.port}";
+        SUPERMEMORY_MCP_PORT = toString cfg.mcp.port;
+      };
+      serviceConfig = {
+        ExecStart = lib.getExe cfg.mcp.package;
+        DynamicUser = true;
+        Restart = "on-failure";
+        RestartSec = 5;
+      };
+    };
+
+    networking.firewall.allowedTCPPorts = lib.mkIf cfg.openFirewall ports;
     networking.firewall.interfaces = lib.genAttrs cfg.firewallInterfaces (_: {
-      allowedTCPPorts = [ cfg.port ];
+      allowedTCPPorts = ports;
     });
   };
 }

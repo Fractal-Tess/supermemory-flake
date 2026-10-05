@@ -21,6 +21,7 @@
         };
       packagesFor = system: {
         supermemory-server = (pkgsFor system).callPackage ./packages/supermemory-server.nix { };
+        supermemory-mcp = (pkgsFor system).callPackage ./packages/supermemory-mcp.nix { };
       };
     in
     {
@@ -37,13 +38,14 @@
       });
 
       checks = forAllSystems (system: {
-        inherit (self.packages.${system}) supermemory-server;
+        inherit (self.packages.${system}) supermemory-server supermemory-mcp;
       });
 
       formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.nixfmt);
 
       overlays.default = final: _previous: {
         supermemory-server = final.callPackage ./packages/supermemory-server.nix { };
+        supermemory-mcp = final.callPackage ./packages/supermemory-mcp.nix { };
       };
 
       nixosModules.default = import ./modules/nixos.nix { inherit self; };

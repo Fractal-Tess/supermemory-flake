@@ -64,6 +64,16 @@ export SUPERMEMORY_API_URL="http://your-host:6767"
 export SUPERMEMORY_CC_API_KEY="sm_..."
 ```
 
+### Memory tools (MCP)
+
+The plugin's search and save tools talk MCP, which the self-hosted server does not serve. Set `services.supermemory-server.mcp.enable = true` to run a small MCP endpoint next to it (port 6768), then add:
+
+```sh
+export SUPERMEMORY_MCP_URL="http://your-host:6768/mcp"
+```
+
+It provides `search_memory`, `add_memory`, `listDocuments`, and `whoAmI`, and passes your API key straight through to the server.
+
 ## Update
 
 The daily [update workflow](.github/workflows/update.yml) checks the latest stable `server-v*` release, refreshes both Linux hashes, builds the package, and commits a validated update. Run the same process locally with:
