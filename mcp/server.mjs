@@ -11,6 +11,9 @@ const API_URL = (process.env.SUPERMEMORY_API_URL || "http://127.0.0.1:6767").rep
 const HOST = process.env.SUPERMEMORY_MCP_HOST || "0.0.0.0";
 const PORT = Number(process.env.SUPERMEMORY_MCP_PORT || 6768);
 const DEFAULT_CONTAINER = process.env.SUPERMEMORY_MCP_DEFAULT_CONTAINER || "default";
+// The server's own default cut-off drops paraphrased and cross-language
+// matches, so ask for looser ones and let the caller judge by the score.
+const SEARCH_THRESHOLD = Number(process.env.SUPERMEMORY_MCP_SEARCH_THRESHOLD || 0.3);
 const MAX_BODY_BYTES = 1024 * 1024;
 
 const containerTag = {
@@ -87,6 +90,7 @@ const handlers = {
       q: args.query,
       containerTag: tag,
       limit: args.limit || 10,
+      threshold: SEARCH_THRESHOLD,
     });
     const results = found.results || [];
     if (results.length === 0) return text(`No matching memories found in ${tag}.`);

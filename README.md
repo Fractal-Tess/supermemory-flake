@@ -38,14 +38,28 @@ Use the NixOS module (a system service with its own user) or the Home Manager mo
     enable = true;
     port = 6767;
     firewallInterfaces = [ "wt0" ];                 # NixOS only
-    environment.OPENAI_BASE_URL = "http://localhost:11434/v1";
-    environment.OPENAI_MODEL = "gpt-oss:20b";
     environmentFile = "/run/secrets/supermemory.env"; # OPENAI_API_KEY=...
   };
 }
 ```
 
-The server needs one LLM for memory extraction: OpenAI, Anthropic, Gemini, Groq, or any OpenAI-compatible endpoint. Embeddings run locally by default. See the [upstream configuration reference](https://supermemory.ai/docs/self-hosting/configuration) for every variable.
+The server needs one LLM for memory extraction: OpenAI, Anthropic, Gemini, Groq, or any OpenAI-compatible endpoint. The model must support tool calling. Embeddings run on the CPU by default; `embeddings.*` moves them to a hosted or local endpoint. For example, both through OpenRouter:
+
+```nix
+services.supermemory-server = {
+  llm.baseUrl = "https://openrouter.ai/api/v1";
+  llm.model = "google/gemini-2.5-flash";
+  embeddings = {
+    provider = "openai-compatible";
+    baseUrl = "https://openrouter.ai/api/v1";
+    model = "baai/bge-m3";
+    dimensions = 1024;
+  };
+  environmentFile = "/run/secrets/supermemory.env"; # OPENAI_API_KEY=sk-or-...
+};
+```
+
+Pick an embedding model that natively produces at most 2000 numbers per vector; the server does not ask providers to shrink them. Changing the model later needs a fresh data directory. See the [upstream configuration reference](https://supermemory.ai/docs/self-hosting/configuration) for every variable.
 
 Data and the generated API key live in `/var/lib/supermemory` (NixOS) or `~/.local/share/supermemory` (Home Manager). Read the key from the `api-key` file there.
 
