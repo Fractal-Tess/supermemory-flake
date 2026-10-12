@@ -7,7 +7,7 @@
 <p align="center">
   <a href="flake.nix"><img src="https://img.shields.io/badge/Nix-flake-5277C3?logo=nixos&logoColor=white" alt="Nix flake" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" /></a>
-  <a href="https://github.com/supermemoryai/supermemory/releases/tag/server-v0.0.8"><img src="https://img.shields.io/badge/Supermemory_server-0.0.8-black" alt="Supermemory server 0.0.8" /></a>
+  <a href="https://github.com/supermemoryai/supermemory/releases/tag/server-v0.0.9"><img src="https://img.shields.io/badge/Supermemory_server-0.0.9-black" alt="Supermemory server 0.0.9" /></a>
 </p>
 
 [Supermemory](https://supermemory.ai) is a memory API for AI agents: it stores what they learn and finds it again with hybrid search.
@@ -65,7 +65,7 @@ Data and the generated API key live in `/var/lib/supermemory` (NixOS) or `~/.loc
 
 ## Before you expose it
 
-- The 0.0.8 server listens on every interface and trusts unauthenticated requests from localhost. Keep the port closed, or open it only on a private interface with `firewallInterfaces`.
+- The 0.0.9 server listens on every interface and trusts unauthenticated requests from localhost. Keep the port closed, or open it only on a private interface with `firewallInterfaces`.
 - Telemetry is turned off by default here. Set `telemetry = true` to leave it on.
 - The binary is closed source and free up to 10,000 documents under upstream's lite license. The package is marked unfree; the flake allows that one package for you.
 
@@ -96,7 +96,7 @@ The daily [update workflow](.github/workflows/update.yml) checks the latest stab
 ./scripts/update.sh
 ```
 
-Pass a version such as `./scripts/update.sh 0.0.8` to pin a specific release.
+Pass a version such as `./scripts/update.sh 0.0.9` to pin a specific release.
 
 ## Credits
 

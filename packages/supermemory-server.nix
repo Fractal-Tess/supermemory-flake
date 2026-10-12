@@ -8,16 +8,16 @@
 
 let
   pname = "supermemory-server";
-  version = "0.0.8";
+  version = "0.0.9";
 
   sources = {
     x86_64-linux = {
       asset = "supermemory-server-linux-x64";
-      hash = "sha256-h/MkM9AXm+gLudihuvusZa9BKDJDQqJ+y4vRp3tVBvM=";
+      hash = "sha256-15h+y/KwJMbenRZ77Lz8qrzkRxabQdb1bbhvh9UYeYQ=";
     };
     aarch64-linux = {
       asset = "supermemory-server-linux-arm64";
-      hash = "sha256-7rnmKov1lka9eZoF0aKYG5RUE6A2QMOjn08metLSvzc=";
+      hash = "sha256-t4m+Fs1xkrPAjogjlsCpS6Mw6kZ9Wn+xs5rDaEq/U3Q=";
     };
   };
 
