@@ -2,6 +2,7 @@
 { lib, cfg }:
 {
   PORT = toString cfg.port;
+  SUPERMEMORY_HOST = cfg.host;
 }
 // lib.optionalAttrs (!cfg.telemetry) { SUPERMEMORY_DISABLE_TELEMETRY = "1"; }
 // lib.optionalAttrs (cfg.llm.baseUrl != null) { OPENAI_BASE_URL = cfg.llm.baseUrl; }

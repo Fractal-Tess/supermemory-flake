@@ -16,7 +16,18 @@
     port = lib.mkOption {
       type = lib.types.port;
       default = 6767;
-      description = "Port for the HTTP API. The server listens on every interface.";
+      description = "Port for the HTTP API.";
+    };
+
+    host = lib.mkOption {
+      type = lib.types.str;
+      default = "0.0.0.0";
+      example = "127.0.0.1";
+      description = ''
+        Address the HTTP API binds to. The server itself defaults to 127.0.0.1
+        since 0.0.9; this keeps it reachable from other machines, so limit
+        access with the firewall or set this to 127.0.0.1.
+      '';
     };
 
     environment = lib.mkOption {
