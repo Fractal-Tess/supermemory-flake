@@ -86,7 +86,7 @@ The plugin's search and save tools talk MCP, which the self-hosted server does n
 export SUPERMEMORY_MCP_URL="http://your-host:6768/mcp"
 ```
 
-It provides `search_memory`, `add_memory`, `listDocuments`, and `whoAmI`, and passes your API key straight through to the server.
+It provides `search_memory`, `add_memory`, `listDocuments`, `listSpaces`, `listMemories`, and `whoAmI`, and passes your API key straight through to the server. `listMemories` pages through everything a space has learned, or shows chosen memories with their versions and source document, so an agent can review a project's memories. There is deliberately no tool that forgets memories.
 
 ## Update
 

@@ -61,6 +61,28 @@ const TOOLS = [
     annotations: { readOnlyHint: true },
   },
   {
+    name: "listSpaces",
+    description: "List every space (one per project) with its memory and document counts.",
+    inputSchema: { type: "object", properties: {} },
+    annotations: { readOnlyHint: true },
+  },
+  {
+    name: "listMemories",
+    description:
+      "List the memories learned in a space, newest first, one page at a time. Pass ids instead to get those " +
+      "memories in full: their earlier and later versions and the document they came from.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        containerTag,
+        page: { type: "integer", minimum: 1, description: "Page to return (default 1)." },
+        limit: { type: "integer", minimum: 1, maximum: 100, description: "Memories per page (default 100)." },
+        ids: { type: "array", items: { type: "string" }, maxItems: 20, description: "Memory IDs to show in full." },
+      },
+    },
+    annotations: { readOnlyHint: true },
+  },
+  {
     name: "whoAmI",
     description: "Show which Supermemory server these tools talk to and whether the credentials work.",
     inputSchema: { type: "object", properties: {} },
@@ -68,11 +90,12 @@ const TOOLS = [
   },
 ];
 
+// A body makes it a POST; without one it is a GET.
 async function api(authorization, path, body) {
   const response = await fetch(`${API_URL}${path}`, {
-    method: "POST",
+    method: body === undefined ? "GET" : "POST",
     headers: { Authorization: authorization, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: body === undefined ? undefined : JSON.stringify(body),
     signal: AbortSignal.timeout(25000),
   });
   const text = await response.text();
@@ -81,6 +104,47 @@ async function api(authorization, path, body) {
 }
 
 const text = (value) => ({ content: [{ type: "text", text: value }] });
+const day = (iso) => (iso || "").slice(0, 10);
+const oneLine = (value, max = 300) => {
+  const flat = (value || "").replace(/\s+/g, " ").trim();
+  return flat.length > max ? `${flat.slice(0, max)}…` : flat;
+};
+
+// One line per memory: what an agent needs to judge it without opening it.
+function memoryLine(memory) {
+  const flags = [
+    `v${memory.version}`,
+    !memory.isLatest && "superseded",
+    memory.isStatic && "static",
+    memory.isInference && "inferred",
+    memory.isForgotten && "forgotten",
+  ].filter(Boolean);
+  return `- ${memory.id} · ${day(memory.system?.createdAt)} · ${flags.join(" · ")} — ${oneLine(memory.memory, 1000)}`;
+}
+
+function memoryDetail(memory) {
+  const lines = [`### ${memory.id}`, memoryLine(memory).slice(2)];
+  const related = memory.included?.related || {};
+  const sections = [
+    ["Earlier versions", related.parents],
+    ["Later versions", related.children],
+    ["Related", related.siblings],
+  ];
+  for (const [title, items] of sections) {
+    if (!items?.length) continue;
+    lines.push(`${title}:`);
+    for (const item of items) {
+      const version = item.version == null ? "" : ` v${item.version}`;
+      lines.push(`  - ${item.id}${version} (${item.relation}, ${day(item.system?.updatedAt)}) — ${oneLine(item.memory)}`);
+    }
+  }
+  const doc = memory.included?.document;
+  if (doc) {
+    const label = oneLine(doc.summary || doc.title, 200);
+    lines.push(`Source document: ${doc.id} (${day(doc.system?.createdAt)}) ${label}`);
+  }
+  return lines.join("\n");
+}
 
 const handlers = {
   async search_memory(args, authorization) {
@@ -120,6 +184,48 @@ const handlers = {
     return text(`## Documents (${tag})\n${lines.join("\n")}`);
   },
 
+  async listSpaces(_args, authorization) {
+    const spaces = [];
+    for (let page = 1; ; page++) {
+      const listed = await api(authorization, `/ns?page=${page}&limit=100`);
+      spaces.push(...(listed.namespaces || []));
+      if ((listed.namespaces || []).length < 100) break;
+    }
+    if (spaces.length === 0) return text("No spaces yet.");
+    spaces.sort((a, b) => b.memoryCount - a.memoryCount);
+    const lines = spaces.map(
+      (space) =>
+        `- ${space.namespace} · ${space.memoryCount} memories · ${space.documentCount} documents · ` +
+        `updated ${day(space.system?.updatedAt)}`,
+    );
+    return text(`## Spaces (${spaces.length})\n${lines.join("\n")}`);
+  },
+
+  async listMemories(args, authorization) {
+    const tag = encodeURIComponent(args.containerTag || DEFAULT_CONTAINER);
+    if (Array.isArray(args.ids) && args.ids.length > 0) {
+      const details = await Promise.all(
+        args.ids.slice(0, 20).map((id) =>
+          api(authorization, `/ns/${tag}/memories/${encodeURIComponent(id)}?include=related,documents`)
+            .then(memoryDetail)
+            .catch((error) => `### ${id}\n${error.message}`),
+        ),
+      );
+      return text(details.join("\n\n"));
+    }
+    const page = args.page || 1;
+    const query = `page=${page}&limit=${args.limit || 100}&sort=createdAt&order=desc`;
+    const listed = await api(authorization, `/ns/${tag}/list/memories?${query}`, {});
+    const memories = listed.memories || [];
+    if (memories.length === 0) return text(`No memories in ${args.containerTag || DEFAULT_CONTAINER}.`);
+    const { totalItems, totalPages } = listed.pagination || {};
+    const more = page < totalPages ? ` Call again with page ${page + 1} for more.` : "";
+    return text(
+      `## Memories (${args.containerTag || DEFAULT_CONTAINER}) · page ${page} of ${totalPages} · ${totalItems} total.${more}\n` +
+        memories.map(memoryLine).join("\n"),
+    );
+  },
+
   async whoAmI(_args, authorization) {
     const listed = await api(authorization, "/v3/documents/list", { limit: 1 });
     const total = listed.pagination?.totalItems ?? "unknown";
@@ -138,7 +244,7 @@ async function handleMessage(message, authorization) {
       return reply({
         protocolVersion: params?.protocolVersion || "2025-03-26",
         capabilities: { tools: {} },
-        serverInfo: { name: "supermemory-selfhosted", version: "0.1.0" },
+        serverInfo: { name: "supermemory-selfhosted", version: "0.2.0" },
       });
     case "ping":
       return reply({});
